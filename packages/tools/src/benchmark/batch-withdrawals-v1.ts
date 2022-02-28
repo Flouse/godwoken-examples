@@ -86,16 +86,20 @@ async function batchWithdrawals(from: GodwokenNetwork, privKeys: string[]) {
       console.log('layer1OwnerLock:', layer1OwnerLock);
       const typedMsg = {
         domain: {
-          chainId: Number(chainId),
           name: "Godwoken",
           version: "1",
+          chainId: Number(chainId),
         },
         message: {
           accountScriptHash: layer2AccountScriptHash,
           nonce,
           chainId: Number(chainId),
           fee: Number(fee),
-          layer1OwnerLock: layer1OwnerLock,
+          layer1OwnerLock: {
+            codeHash: layer1OwnerLock.code_hash,
+            hashType: layer1OwnerLock.hash_type,
+            args: layer1OwnerLock.args,
+          },
           withdraw: {
             ckbCapacity: capacity,
             UDTAmount: amount,
@@ -118,8 +122,8 @@ async function batchWithdrawals(from: GodwokenNetwork, privKeys: string[]) {
             { name: "withdraw", type: "WithdrawalAsset" },
           ],
           Script: [
-            { name: "code_hash", type: "bytes32" },
-            { name: "hash_type", type: "string" },
+            { name: "codeHash", type: "bytes32" },
+            { name: "hashType", type: "string" },
             { name: "args", type: "bytes" },
           ],
           WithdrawalAsset: [
