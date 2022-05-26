@@ -7,7 +7,7 @@ import {
   Cell,
 } from "@ckb-lumos/base";
 import {
-  Godwoken,
+  GodwokenWeb3,
   Uint32,
   Uint128,
   RawL2Transaction,
@@ -22,22 +22,21 @@ import {
   SUDTTransfer,
   UnoinType,
 } from "@godwoken-examples/godwoken/lib/normalizer";
+import { EthAddress } from "@godwoken-examples/godwoken/lib/address";
 import {
   SerializeSUDTArgs,
   SerializeWithdrawalLockArgs,
 } from "@godwoken-examples/godwoken/schemas";
 import { Reader } from "ckb-js-toolkit";
 import TronWeb from 'tronweb';
-import { getRollupTypeHash } from "./deposit";
-
 import * as secp256k1 from "secp256k1";
 import { privateKeyToEthAddress } from "./utils";
-import { deploymentConfig } from "./deployment-config";
+import { initDeploymentConfig } from "./deployment-config";
 import { ROLLUP_TYPE_HASH } from "./godwoken-config";
 import { minimalCellCapacity } from "@ckb-lumos/helpers";
 
 export async function withdrawCLI(
-  godwoken: Godwoken,
+  gWeb3: GodwokenWeb3,
   fromId: Uint32,
   capacity: bigint,
   amount: bigint,
@@ -60,7 +59,7 @@ export async function withdrawCLI(
     );
   }
 
-  const nonce: Uint32 = await godwoken.getNonce(fromId);
+  const nonce: Uint32 = await gWeb3.getNonce(fromId);
   console.log("nonce:", nonce);
 
   const rawWithdrawalRequest = GodwokenUtils.createRawWithdrawalRequest(
@@ -79,9 +78,8 @@ export async function withdrawCLI(
     }
   );
 
-  // console.log("rawWithdrawalRequest:", rawWithdrawalRequest);
-
-  const godwokenUtils = new GodwokenUtils(getRollupTypeHash());
+  const rollupTypeHash: Hash = await gWeb3.getRollupTypeHash();
+  const godwokenUtils = new GodwokenUtils(rollupTypeHash);
   const message = godwokenUtils.generateWithdrawalMessageToSign(
     rawWithdrawalRequest
   );
@@ -102,7 +100,7 @@ export async function withdrawCLI(
 
   console.log("withdrawalRequest:", withdrawalRequest);
 
-  const result = await godwoken.submitWithdrawalRequest(withdrawalRequest);
+  const result = await gWeb3.submitWithdrawalRequest(withdrawalRequest);
   console.log("result:", result);
 
   if (result !== null) {
@@ -117,7 +115,7 @@ export async function withdrawCLI(
 }
 
 export async function transferCLI(
-  godwoken: Godwoken,
+  gWeb3: GodwokenWeb3,
   privateKey: string,
   fromId: Uint32,
   toAddress: HexString,
@@ -126,7 +124,7 @@ export async function transferCLI(
   fee: Uint128
 ): Promise<Hash> {
   console.log("--- godwoken sudt transfer ---");
-  const nonce = await godwoken.getNonce(fromId);
+  const nonce = await gWeb3.getNonce(fromId);
 
   const sudtTransfer: SUDTTransfer = {
     to: toAddress,
@@ -154,10 +152,9 @@ export async function transferCLI(
 
   // console.log("rawL2Transaction:", rawL2Transaction);
 
-  const rollupTypeHash: Hash = getRollupTypeHash();
-
-  const senderScriptHash = await godwoken.getScriptHash(fromId);
-  const receiverScriptHash = await godwoken.getScriptHash(sudtId);
+  const rollupTypeHash: Hash = await gWeb3.getRollupTypeHash();
+  const senderScriptHash = await gWeb3.getScriptHash(fromId);
+  const receiverScriptHash = await gWeb3.getScriptHash(sudtId);
   console.log("sender script hash:", senderScriptHash);
   console.log("receiver script hash:", receiverScriptHash);
 
@@ -184,7 +181,7 @@ export async function transferCLI(
 
   console.log("l2 transaction:", l2Transaction);
 
-  const txHash = await godwoken.submitL2Transaction(l2Transaction);
+  const txHash = await gWeb3.submitL2Transaction(l2Transaction);
   console.log("l2 tx hash:", txHash);
 
   console.log("--- godwoken sudt transfer finished ---");
@@ -204,9 +201,11 @@ function signMessage(message: string, privkey: string) {
 }
 
 export async function privateKeyToAccountId(
-  godwoken: Godwoken,
+  gWeb3: GodwokenWeb3,
   privateKey: HexString
 ): Promise<number | undefined> {
+  const deploymentConfig = await initDeploymentConfig(gWeb3);
+
   const ethAddress = privateKeyToEthAddress(privateKey);
   const script = {
     ...deploymentConfig.eth_account_lock,
@@ -215,74 +214,53 @@ export async function privateKeyToAccountId(
 
   const scriptHash = utils.computeScriptHash(script);
 
-  const id = await godwoken.getAccountIdByScriptHash(scriptHash);
+  const id = await gWeb3.getAccountIdByScriptHash(scriptHash);
 
   return id;
 }
 
-export function privateKeyToShortAddress(
-  privateKey: HexString
-): HexString | undefined {
-  const ethAddress = privateKeyToEthAddress(privateKey);
-  const script = {
-    ...deploymentConfig.eth_account_lock,
-    args: ROLLUP_TYPE_HASH + ethAddress.slice(2),
-  };
-  const scriptHash = utils.computeScriptHash(script);
-  const shortAddress = scriptHash.slice(0, 42);
-  return shortAddress;
-}
-
-export function privateKeyToScriptHash(privateKey: HexString): Hash {
-  const ethAddress = privateKeyToEthAddress(privateKey);
-  const script = {
-    ...deploymentConfig.eth_account_lock,
-    args: ROLLUP_TYPE_HASH + ethAddress.slice(2),
-  };
-
-  const scriptHash = utils.computeScriptHash(script);
-
-  return scriptHash;
-}
-
+/**
+ * @deprecated
+ */
 export function ethAddressToScriptHash(ethAddress: HexString): Hash {
-  const script = {
-    ...deploymentConfig.eth_account_lock,
-    args: ROLLUP_TYPE_HASH + ethAddress.slice(2),
+  throw new Error("ethAddressToScriptHash function has been deprecated");
+  
+  // const script = {
+  //   ...deploymentConfig.eth_account_lock,
+  //   args: ROLLUP_TYPE_HASH + ethAddress.slice(2),
+  // };
+
+  // const scriptHash = utils.computeScriptHash(script);
+
+  // return scriptHash;
+}
+
+export function ethAddrToScriptHash(
+  rollupTypeHash: Hash,
+  ethAccountLock: Script,
+  ethAddress: EthAddress
+): Hash {
+  const accountScript: Script =  {
+    ...ethAccountLock,
+    args: rollupTypeHash + ethAddress.slice(2),
   };
-
-  const scriptHash = utils.computeScriptHash(script);
-
-  return scriptHash;
+  return utils.computeScriptHash(accountScript);
 }
 
-export function tronAddressBase58ToScriptHash(tronAddress: string): Hash {
-  return tronAddressHexToScriptHash(tronAddressBase58ToHex(tronAddress));
-}
 
-export function tronAddressHexToScriptHash(tronAddress: string): Hash {
-  const script = {
-    ...deploymentConfig.tron_account_lock,
-    args: ROLLUP_TYPE_HASH + tronAddress.slice(2),
-  };
-
-  const scriptHash = utils.computeScriptHash(script);
-
-  return scriptHash;
-}
-
+/**
+ * @deprecated
+ */
 export async function getBalanceByScriptHash(
-  godwoken: Godwoken,
+  godwoken: GodwokenWeb3,
   sudtId: number,
   scriptHash: Hash
 ): Promise<bigint> {
-  const address = scriptHash.slice(0, 42);
-  const balance = await godwoken.getBalance(sudtId, address);
-  return balance;
+  throw new Error("getBalanceByScriptHash(shortScriptHash) method has been deprecated");
 }
 
 export async function parseAccountToShortAddress(
-  godwoken: Godwoken,
+  godwoken: GodwokenWeb3,
   account: string
 ): Promise<HexString> {
   // account is an address
@@ -297,7 +275,7 @@ export async function parseAccountToShortAddress(
 }
 
 export async function parseAccountToId(
-  godwoken: Godwoken,
+  godwoken: GodwokenWeb3,
   account: string
 ): Promise<number | undefined> {
   // if account is an address
@@ -311,7 +289,9 @@ export async function parseAccountToId(
   return +account;
 }
 
-export async function getAccountIdByContractAddress(godwoken: Godwoken, _address: HexString): Promise<HexNumber | undefined> {
+export async function getAccountIdByContractAddress(
+  godwoken: GodwokenWeb3, _address: HexString
+): Promise<HexNumber | undefined> {
   // todo: support create2 address in such case that it haven't create real contract yet.
   const address = Buffer.from(_address.slice(2), "hex");
   if (address.byteLength !== 20)

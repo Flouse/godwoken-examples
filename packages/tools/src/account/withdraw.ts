@@ -8,10 +8,10 @@ import {
 } from "../modules/godwoken";
 import { ckbAddressToLockHash, privateKeyToEthAddress } from "../modules/utils";
 import { initConfig, waitForWithdraw } from "./common";
-import { Godwoken } from "@godwoken-examples/godwoken";
+import { GodwokenWeb3 } from "@godwoken-examples/godwoken";
 
 async function withdrawal(
-  godwoken: Godwoken,
+  godwoken: GodwokenWeb3,
   privateKey: string,
   capacity: string,
   amount: string,
@@ -63,7 +63,7 @@ export const run = async (program: Command) => {
   console.log("eth address:", ethAddress);
   const accountScriptHash = ethAddressToScriptHash(ethAddress);
 
-  const godwoken = new Godwoken(program.parent.godwokenRpc);
+  const godwoken = new GodwokenWeb3(program.parent.godwokenRpc);
   try {
     const currentBalance = await getBalanceByScriptHash(
       godwoken,

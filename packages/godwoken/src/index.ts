@@ -19,10 +19,13 @@ import {
   Fee,
 } from "./types";
 import keccak256 from "keccak256";
+import { EthAddress, registryAddress } from "./address";
 
 import * as core from "../schemas";
 import * as normalizer from "./normalizer";
-export { core, normalizer };
+import { DepositLockArgs, DepositLockArgsCodec } from "./schema";
+
+export { core, normalizer, DepositLockArgs, DepositLockArgsCodec };
 export * from "./types";
 
 export function numberToUInt32LE(value: number): HexString {
@@ -63,8 +66,9 @@ function toArrayBuffer(buf: Buffer) {
   return ab;
 }
 
-export class Godwoken {
+export class GodwokenWeb3 {
   private rpc: RPC;
+  private nodeInfo: any;
 
   constructor(url: string) {
     this.rpc = new RPC(url);
@@ -105,18 +109,38 @@ export class Godwoken {
     return await this.rpcCall("submit_withdrawal_request", data);
   }
 
+  // https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_get_script_hash_by_registry_address
+  async getScriptHashByEthAddress(addr: EthAddress): Promise<Hash> {
+    const regAddr = registryAddress(addr);
+    return this.rpcCall("get_script_hash_by_registry_address", regAddr);
+  }
+
+  /**
+   * @deprecated
+   */
   async getScriptHashByShortAddress(address: HexString): Promise<Hash> {
+    throw new Error("getScriptHashByShortAddress method has been deprecated");
     return await this.rpcCall("get_script_hash_by_short_address", address);
   }
 
-  // TODO: maybe swap params later?
+  // https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_get_balance
   async getBalance(sudt_id: Uint32, address: HexString): Promise<Uint128> {
     const sudt_id_hex = `0x${(+sudt_id).toString(16)}`;
-    const balance = await this.rpcCall("get_balance", address, sudt_id_hex);
+    const regAddr = registryAddress(address);
+    const balance = await this.rpcCall(
+      "get_balance", regAddr, sudt_id_hex);
+
+    console.log("balance", balance);
+    
     return BigInt(balance);
   }
 
+  /**
+   * @deprecated
+   */
   async getBalanceById(sudt_id: Uint32, account_id: Uint32): Promise<Uint128> {
+    throw new Error("getBalanceById method has been deprecated");
+    
     const scriptHash = await this.getScriptHash(account_id);
     const address = scriptHash.slice(0, 42);
     const balance = await this.getBalance(sudt_id, address);
@@ -160,6 +184,18 @@ export class Godwoken {
 
   async getTransactionReceipt(l2_tx_hash: Hash) {
     return await this.rpcCall("get_transaction_receipt", l2_tx_hash);
+  }
+
+  async getNodeInfo() {
+    if (this.nodeInfo == null) {
+      this.nodeInfo = await this.rpc["poly_version"]();
+    }
+    return this.nodeInfo;
+  }
+
+  async getRollupTypeHash(): Promise<Hash> {
+    const { nodeInfo } = await this.getNodeInfo();
+    return nodeInfo.rollupCell.typeHash;
   }
 }
 

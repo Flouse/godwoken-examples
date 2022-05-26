@@ -3,10 +3,11 @@ import path from "path";
 import { CkbIndexer } from './indexer-remote';
 import { env } from "process";
 import { RPC } from "ckb-js-toolkit";
-import { Godwoken } from "@godwoken-examples/godwoken";
-
+import { GodwokenWeb3 } from "@godwoken-examples/godwoken";
 import { asyncSleep } from "../modules/utils";
 import { Hash } from "@ckb-lumos/base";
+
+export const CKB_SUDT_ID = 1;
 
 async function indexerReady(indexer: any, updateProgress=((_indexerTip: bigint, _rpcTip: bigint)=>{}), options: any)
 {
@@ -133,7 +134,7 @@ export async function waitTxCommitted(
 }
 
 export async function waitForDeposit(
-  godwoken: Godwoken,
+  gWeb3: GodwokenWeb3,
   accountScriptHash: Hash,
   originBalance: bigint,
   sudtScriptHash?: Hash, // if undefined, sudt id = 1
@@ -149,11 +150,11 @@ export async function waitForDeposit(
 
   for (let i = 0; i < timeout; i += loopInterval) {
     console.log(
-      `Waiting for Layer 2 block producer to collect the deposit cell ... ${i} seconds.`
+      `Waiting until the deposit cell collected by Godwoken... ${i} seconds.`
     );
 
     if (!accountId) {
-      accountId = await godwoken.getAccountIdByScriptHash(accountScriptHash);
+      accountId = await gWeb3.getAccountIdByScriptHash(accountScriptHash);
       if (!accountId) {
         await asyncSleep(loopInterval * 1000);
         continue;
@@ -162,7 +163,7 @@ export async function waitForDeposit(
     }
 
     if (sudtScriptHash !== undefined && (!sudtId || sudtId === 1)) {
-      sudtId = await godwoken.getAccountIdByScriptHash(sudtScriptHash);
+      sudtId = await gWeb3.getAccountIdByScriptHash(sudtScriptHash);
       if (!sudtId) {
         await asyncSleep(loopInterval * 1000);
         continue;
@@ -170,14 +171,16 @@ export async function waitForDeposit(
       console.log("Your sUDT id:", sudtId);
     }
 
+    // FIXME: godwokenCkbBalance
     const address = accountScriptHash.slice(0, 42);
-    const godwokenCkbBalance = await godwoken.getBalance(1, address);
+    const godwokenCkbBalance = await gWeb3.getBalance(1, address);
+
 
     if (originBalance !== godwokenCkbBalance) {
       console.log(`CKB balance in Godwoken is: ${godwokenCkbBalance} Shannons.`);
 
       if (sudtId !== 1) {
-        const godwokenSudtBalance = await godwoken.getBalance(sudtId!, address);
+        const godwokenSudtBalance = await gWeb3.getBalance(sudtId!, address);
         console.log(`sUDT balance in Godwoken is: ${godwokenSudtBalance}.`);
       }
       console.log(`Deposit success!`);
@@ -192,7 +195,7 @@ export async function waitForDeposit(
 }
 
 export async function waitForWithdraw(
-  godwoken: Godwoken,
+  godwoken: GodwokenWeb3,
   accountScriptHash: Hash
 ) {
   const accountId = await godwoken.getAccountIdByScriptHash(accountScriptHash);
@@ -207,7 +210,7 @@ export async function waitForWithdraw(
 }
 
 export async function waitForTransfer(
-  godwoken: Godwoken,
+  godwoken: GodwokenWeb3,
   txHash: Hash,
   timeout: number = 300,
   loopInterval = 10

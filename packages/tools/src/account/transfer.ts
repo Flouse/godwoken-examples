@@ -6,11 +6,11 @@ import {
 } from "../modules/godwoken";
 import { privateKeyToEthAddress } from "../modules/utils";
 import { initConfigAndSync, waitForTransfer } from "./common";
-import { Godwoken } from "@godwoken-examples/godwoken";
+import { GodwokenWeb3 } from "@godwoken-examples/godwoken";
 import { HexString } from "@ckb-lumos/base";
 
 async function transfer(
-  godwoken: Godwoken,
+  godwoken: GodwokenWeb3,
   privateKey: string,
   toAddress: HexString,
   sudtId: number,
@@ -44,7 +44,7 @@ export const run = async (program: Command) => {
   const sudtId = program.sudtId;
   const godwokenURL = program.parent.godwokenRpc;
 
-  const godwoken = new Godwoken(godwokenURL);
+  const godwoken = new GodwokenWeb3(godwokenURL);
 
   const privateKey = program.privateKey;
 

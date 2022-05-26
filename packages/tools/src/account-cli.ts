@@ -1,15 +1,19 @@
+import { LogLevel } from "@ethersproject/logger";
 import { Command } from "commander";
+import { Logger } from "ethers/lib/utils";
 import { toEthAddress, toShortAddress } from "./account/address";
 
-import { run as depositRun } from "./account/deposit-ckb";
+// import { run as depositRun } from "./account/deposit-ckb";
 import { run as depositSudtRun } from "./account/deposit-sudt";
 import { getBalance } from "./account/get-balance";
 import { run as transferRun } from "./account/transfer";
 import { run as withdrawRun } from "./account/withdraw";
-import { run as unlockRun } from "./account/unlock";
+// import { run as unlockRun } from "./account/unlock";
+
+Logger.setLogLevel(LogLevel.INFO);
 
 const program = new Command();
-program.version("0.0.1");
+program.version("1.1.3");
 
 let defaultGodwokenRpc = "http://127.0.0.1:8119";
 if (!process.env.LUMOS_CONFIG_FILE) {
@@ -24,22 +28,22 @@ program.option(
   defaultGodwokenRpc
 );
 
-program
-  .command("deposit")
-  .description("deposit CKB to godwoken")
-  .requiredOption("-p, --private-key <privateKey>", "private key to use")
-  .requiredOption("-c --capacity <capacity>", "capacity in shannons")
-  .option("-r, --rpc <rpc>", "ckb rpc path", "http://127.0.0.1:8114")
-  .option("-i, --indexer <indexer>", "ckb-indexer URL", DEFAULT_LOCAL_INDEXER_URL)
-  .option(
-    "-l, --eth-address <args>",
-    "Eth address (layer2 lock args, using --private-key value to calculate if not provided)"
-  )
-  .option(
-    "-t, --tron-address <args>",
-    "Tron address in base58 format (eg. TFrSJCrSJai8H2Kc32TP3nEzuWsXu8YnUJ)"
-  )
-  .action(depositRun);
+// program
+//   .command("deposit")
+//   .description("deposit CKB to godwoken")
+//   .requiredOption("-p, --private-key <privateKey>", "private key to use")
+//   .requiredOption("-c --capacity <capacity>", "capacity in shannons")
+//   .option("-r, --rpc <rpc>", "ckb rpc path", "http://127.0.0.1:8114")
+//   .option("-i, --indexer <indexer>", "ckb-indexer URL", DEFAULT_LOCAL_INDEXER_URL)
+//   .option(
+//     "-l, --eth-address <args>",
+//     "Eth address (layer2 lock args, using --private-key value to calculate if not provided)"
+//   )
+//   .option(
+//     "-t, --tron-address <args>",
+//     "Tron address in base58 format (eg. TFrSJCrSJai8H2Kc32TP3nEzuWsXu8YnUJ)"
+//   )
+//   .action(depositRun);
 
 program
   .command("deposit-sudt")
@@ -122,16 +126,16 @@ program
   )
   .action(toEthAddress);
 
-program
-  .command("unlock")
-  .description("unlock withdrawal CKB / sUDT from godwoken")
-  .requiredOption("-p, --private-key <privateKey>", "private key to use")
-  .option(
-    "-s, --sudt-script-args <l1 sudt script args>",
-    "only for unlock sudt"
-  )
-  .option("-r, --rpc <rpc>", "ckb rpc path", "http://127.0.0.1:8114")
-  .option("-i, --indexer <indexer>", "ckb-indexer URL", DEFAULT_LOCAL_INDEXER_URL)
-  .action(unlockRun);
+// program
+//   .command("unlock")
+//   .description("unlock withdrawal CKB / sUDT from godwoken")
+//   .requiredOption("-p, --private-key <privateKey>", "private key to use")
+//   .option(
+//     "-s, --sudt-script-args <l1 sudt script args>",
+//     "only for unlock sudt"
+//   )
+//   .option("-r, --rpc <rpc>", "ckb rpc path", "http://127.0.0.1:8114")
+//   .option("-i, --indexer <indexer>", "ckb-indexer URL", DEFAULT_LOCAL_INDEXER_URL)
+//   .action(unlockRun);
 
 program.parse(process.argv);

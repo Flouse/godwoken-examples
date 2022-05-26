@@ -5,6 +5,8 @@ export type Uint64 = bigint;
 export type Uint128 = bigint;
 export type Uint256 = bigint;
 
+export type HexU32 = HexNumber;
+
 export interface RunResult {
   read_values: Map<Hash, Hash>;
   write_values: Map<Hash, Hash>;
@@ -82,7 +84,13 @@ export interface UnlockWithdrawalViaFinalize {
 // }
 // FIXME: todo
 // export interface L2Block {}
+
 export enum Status {
   Running = "running",
   Halting = "halting",
+}
+
+export interface RegistryAddress {
+  registry_id: HexU32;
+  address: HexString;
 }

@@ -1,113 +1,100 @@
-import { Reader } from "ckb-js-toolkit";
-import {
-  SerializeCustodianLockArgs,
-  SerializeDepositLockArgs,
-} from "@godwoken-examples/godwoken/schemas";
-import { DeploymentConfig } from "./deployment-config";
+// import { Reader } from "@ckb-lumos/toolkit";
+// import {
+//   SerializeCustodianLockArgs,
+// } from "@godwoken-examples/godwoken/schemas";
 import {
   Script,
-  HexString,
   Hash,
-  PackedSince,
   utils,
-  Cell,
-  HexNumber,
 } from "@ckb-lumos/base";
-import {
-  NormalizeDepositLockArgs,
-  CustodianLockArgs,
-  NormalizeCustodianLockArgs,
-} from "@godwoken-examples/godwoken/lib/normalizer";
-import { minimalCellCapacity } from "@ckb-lumos/helpers";
-const godwokenConfig = require("../../configs/godwoken-config.json");
+// import {
+//   CustodianLockArgs,
+//   NormalizeCustodianLockArgs,
+// } from "@godwoken-examples/godwoken/lib/normalizer";
+import { DepositLockArgs, DepositLockArgsCodec } from "@godwoken-examples/godwoken";
 
-export interface DepositLockArgs {
-  owner_lock_hash: Hash;
-  layer2_lock: Script;
-  cancel_timeout: PackedSince;
-}
+// import { minimalCellCapacity } from "@ckb-lumos/helpers";
+import { ETH_REGISTRY_ID } from "@godwoken-examples/godwoken/lib/address";
+import { logger } from "ethers";
 
-export function serializeArgs(args: DepositLockArgs): HexString {
-  const rollup_type_hash: Hash = getRollupTypeHash();
-
-  const serializedDepositLockArgs: ArrayBuffer = SerializeDepositLockArgs(
-    NormalizeDepositLockArgs(args)
-  );
-
-  const depositLockArgsStr: HexString = new Reader(
-    serializedDepositLockArgs
-  ).serializeJson();
-
-  return rollup_type_hash + depositLockArgsStr.slice(2);
-}
 
 export function generateDepositLock(
-  config: DeploymentConfig,
-  args: HexString
-): Script {
-  return {
-    code_hash: config.deposit_lock.code_hash,
-    hash_type: config.deposit_lock.hash_type,
-    args: args,
-  };
-}
-
-export function getDepositLockArgs(
+  gwRollupTypeHash: Hash,
   ownerLockHash: Hash,
-  layer2_lock: Script,
-  cancelTimeout: PackedSince = "0xc00000000002a300"
-): DepositLockArgs {
+  layer2Lock: Script,
+  depositLockTypeHash: Hash
+): Script {
   const depositLockArgs: DepositLockArgs = {
     owner_lock_hash: ownerLockHash,
-    layer2_lock: layer2_lock,
-    cancel_timeout: cancelTimeout, // relative timestamp, 2 days
+    layer2_lock: layer2Lock,
+    cancel_timeout: "0xc000000000093a81",
+    registry_id: '0x' + ETH_REGISTRY_ID,
   };
-  return depositLockArgs;
+  logger.debug("depositLockArgs:", depositLockArgs);
+
+  const depositLockArgsCodec = new DepositLockArgsCodec(depositLockArgs);
+  const depositLockArgsHexString =
+    gwRollupTypeHash + depositLockArgsCodec.HexSerialize().slice(2);
+  logger.debug("depositLockArgsHexString:", depositLockArgsHexString);
+
+  const depositLock: Script = {
+    code_hash: depositLockTypeHash,
+    hash_type: "type",
+    args: depositLockArgsHexString,
+  };
+  logger.debug("depositLock:", depositLock);
+  logger.debug("depositLock Hash:", utils.computeScriptHash(depositLock));
+  return depositLock;
 }
 
-export function getRollupTypeHash(): HexString {
-  const rollupTypeScript: Script = godwokenConfig.chain
-    .rollup_type_script as Script;
-  const hash: HexString = utils.computeScriptHash(rollupTypeScript);
+/**
+ * @deprecated
+ */
+export function getRollupTypeHash() {
+  throw new Error("getRollupTypeHash() in deposit.ts has been deprecated");
 
-  return hash;
+  // const rollupTypeScript: Script = godwokenConfig.chain
+  //   .rollup_type_script as Script;
+  // const hash: HexString = utils.computeScriptHash(rollupTypeScript);
+  // return hash;
 }
 
-export function minimalDepositCapacity(
-  output: Cell,
-  depositLockArgs: DepositLockArgs
-): bigint {
-  // fixed size, the specific value is not important.
-  const dummyHash: Hash = "0x" + "00".repeat(32);
-  const dummyHexNumber: HexNumber = "0x0";
-  const rollupTypeHash: Hash = dummyHash;
+// FIXME
+// export function minimalDepositCapacity(
+//   output: Cell,
+//   depositLockArgs: HexString
+// ): bigint {
+//   // fixed size, the specific value is not important.
+//   const dummyHash: Hash = "0x" + "00".repeat(32);
+//   const dummyHexNumber: HexNumber = "0x0";
+//   const rollupTypeHash: Hash = dummyHash;
 
-  const custodianLockArgs: CustodianLockArgs = {
-    deposit_block_hash: dummyHash,
-    deposit_block_number: dummyHexNumber,
-    deposit_lock_args: depositLockArgs,
-  };
+//   const custodianLockArgs: CustodianLockArgs = {
+//     deposit_block_hash: dummyHash,
+//     deposit_block_number: dummyHexNumber,
+//     deposit_lock_args: depositLockArgs,
+//   };
 
-  const serializedCustodianLockArgs: HexString = new Reader(
-    SerializeCustodianLockArgs(NormalizeCustodianLockArgs(custodianLockArgs))
-  ).serializeJson();
+//   const serializedCustodianLockArgs: HexString = new Reader(
+//     SerializeCustodianLockArgs(NormalizeCustodianLockArgs(custodianLockArgs))
+//   ).serializeJson();
 
-  const args = rollupTypeHash + serializedCustodianLockArgs.slice(2);
+//   const args = rollupTypeHash + serializedCustodianLockArgs.slice(2);
 
-  const lock: Script = {
-    code_hash: dummyHash,
-    hash_type: "data",
-    args,
-  };
+//   const lock: Script = {
+//     code_hash: dummyHash,
+//     hash_type: "data",
+//     args,
+//   };
 
-  const cell: Cell = {
-    ...output,
-    cell_output: {
-      ...output.cell_output,
-      lock,
-    },
-  };
-  const capacity: bigint = minimalCellCapacity(cell);
+//   const cell: Cell = {
+//     ...output,
+//     cell_output: {
+//       ...output.cell_output,
+//       lock,
+//     },
+//   };
+//   const capacity: bigint = minimalCellCapacity(cell);
 
-  return capacity;
-}
+//   return capacity;
+// }

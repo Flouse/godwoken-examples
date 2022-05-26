@@ -10,7 +10,7 @@ import { L2Transaction, WithdrawalRequest } from "./types";
 
 // Taken for now from https://github.com/xxuejie/ckb-js-toolkit/blob/68f5ff709f78eb188ee116b2887a362123b016cc/src/normalizers.js#L17-L69,
 // later we can think about exposing those functions directly.
-function normalizeHexNumber(length: number) {
+export function normalizeHexNumber(length: number) {
   return function (debugPath: string, value: any) {
     if (!(value instanceof ArrayBuffer)) {
       let intValue = BigInt(value).toString(16);
