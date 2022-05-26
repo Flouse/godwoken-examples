@@ -14,7 +14,7 @@ function toLittleEndian(value: number): HexString {
   return `0x${buf.toString("hex")}`;
 }
 
-export function registryAddress(ethAddress: EthAddress): HexString {
+export function constructRegistryAddress(ethAddress: EthAddress): HexString {
   return (
     toLittleEndian(ETH_REGISTRY_ID) +
     toLittleEndian(ETH_ADDR_LEN).slice(2) +

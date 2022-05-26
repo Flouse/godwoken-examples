@@ -224,29 +224,20 @@ export async function privateKeyToAccountId(
  */
 export function ethAddressToScriptHash(ethAddress: HexString): Hash {
   throw new Error("ethAddressToScriptHash function has been deprecated");
-  
-  // const script = {
-  //   ...deploymentConfig.eth_account_lock,
-  //   args: ROLLUP_TYPE_HASH + ethAddress.slice(2),
-  // };
-
-  // const scriptHash = utils.computeScriptHash(script);
-
-  // return scriptHash;
 }
 
 export function ethAddrToScriptHash(
   rollupTypeHash: Hash,
-  ethAccountLock: Script,
+  ethAccountLockTypeHash: Hash,
   ethAddress: EthAddress
 ): Hash {
-  const accountScript: Script =  {
-    ...ethAccountLock,
+  const accountScript: Script = {
+    code_hash: ethAccountLockTypeHash,
+    hash_type: 'type',
     args: rollupTypeHash + ethAddress.slice(2),
   };
   return utils.computeScriptHash(accountScript);
 }
-
 
 /**
  * @deprecated

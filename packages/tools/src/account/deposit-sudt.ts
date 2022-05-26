@@ -27,6 +27,8 @@ import { ethAddrToScriptHash } from "../modules/godwoken";
 import { EthAddress } from "@godwoken-examples/godwoken/lib/address";
 import { logger } from "ethers";
 
+const MINIMUM_DEPOSIT_CAPACITY = 500n * 100000000n;
+
 async function sendTx(
   gWeb3: GodwokenWeb3,
   fromAddress: EthAddress,
@@ -113,7 +115,6 @@ async function sendTx(
   return [txHash, layer2SudtScriptHash];
 }
 
-const MINIMUM_DEPOSIT_CAPACITY = 500n * 100000000n;
 
 export const run = async (program: commander.Command) => {
   const ckbRpc = new RPC(program.rpc);
@@ -136,10 +137,7 @@ export const run = async (program: commander.Command) => {
   const gWeb3 = new GodwokenWeb3(web3RpcUrl);
 
   try {
-    // TODO: deprecate DeploymentConfig
-    const deploymentConfig = await initDeploymentConfig(gWeb3);
-
-    const currentBalance = await gWeb3.getBalance(CKB_SUDT_ID, ethAddress);
+    const currentBalance = gWeb3.getBalance(CKB_SUDT_ID, ethAddress);
 
     const [txHash, layer2SudtScriptHash] = await sendTx(
       gWeb3,
@@ -152,24 +150,25 @@ export const run = async (program: commander.Command) => {
       program.sudtScriptArgs,
       capacity
     );
-
     console.log("Transaction hash:", txHash);
     console.log("--------- wait for token deposit transaction ----------");
-    await waitTxCommitted(txHash, ckbRpc);
-
+    const [gwRollupTypeHash, { nodeInfo }] = await Promise.all([
+      gWeb3.getRollupTypeHash(),
+      gWeb3.getNodeInfo(),
+      waitTxCommitted(txHash, ckbRpc)
+    ]);
     let accountScriptHash: Hash = ethAddrToScriptHash(
-      await gWeb3.getRollupTypeHash(),
-      deploymentConfig.eth_account_lock,
+      gwRollupTypeHash,
+      nodeInfo.eoaScripts.eth.typeHash,
       ethAddress
     );
 
-    // TODO: refactor waitForDeposit
-    // await waitForDeposit(
-    //   gWeb3,
-    //   accountScriptHash,
-    //   currentBalance,
-    //   layer2SudtScriptHash
-    // );
+    await waitForDeposit(
+      gWeb3,
+      accountScriptHash,
+      await currentBalance,
+      layer2SudtScriptHash
+    );
 
     process.exit(0);
   } catch (e) {

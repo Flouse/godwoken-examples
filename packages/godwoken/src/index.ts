@@ -19,11 +19,12 @@ import {
   Fee,
 } from "./types";
 import keccak256 from "keccak256";
-import { EthAddress, registryAddress } from "./address";
+import { EthAddress, ETH_REGISTRY_ID, constructRegistryAddress } from "./address";
 
 import * as core from "../schemas";
 import * as normalizer from "./normalizer";
 import { DepositLockArgs, DepositLockArgsCodec } from "./schema";
+import { assertHexString } from "@ckb-lumos/base/lib/utils";
 
 export { core, normalizer, DepositLockArgs, DepositLockArgsCodec };
 export * from "./types";
@@ -111,8 +112,21 @@ export class GodwokenWeb3 {
 
   // https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_get_script_hash_by_registry_address
   async getScriptHashByEthAddress(addr: EthAddress): Promise<Hash> {
-    const regAddr = registryAddress(addr);
+    const regAddr = constructRegistryAddress(addr);
     return this.rpcCall("get_script_hash_by_registry_address", regAddr);
+  }
+
+  async getEthAddrByScriptHash(scriptHash: Hash): Promise<EthAddress> {
+    const { address } = await this.rpcCall(
+      "get_registry_address_by_script_hash",
+      scriptHash, `0x${ETH_REGISTRY_ID.toString(16)}`
+    );
+
+    assertHexString("EthAddress", address);
+    if (address.length !== 42)
+      throw new Error(`getEthAddrByScriptHash should return EthAddress`);
+
+    return address;
   }
 
   /**
@@ -124,15 +138,19 @@ export class GodwokenWeb3 {
   }
 
   // https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_get_balance
-  async getBalance(sudt_id: Uint32, address: HexString): Promise<Uint128> {
+  async getBalance(sudt_id: Uint32, ethAddr: HexString): Promise<Uint128> {
     const sudt_id_hex = `0x${(+sudt_id).toString(16)}`;
-    const regAddr = registryAddress(address);
-    const balance = await this.rpcCall(
-      "get_balance", regAddr, sudt_id_hex);
-
-    console.log("balance", balance);
-    
+    const regAddr = constructRegistryAddress(ethAddr);
+    const balance = await this.rpcCall("get_balance", regAddr, sudt_id_hex);
     return BigInt(balance);
+  }
+
+  async getBalanceByScriptHash(
+    sudt_id: Uint32, scriptHash: Hash
+  ): Promise<Uint128> {
+    const ethAddr = await this.getEthAddrByScriptHash(scriptHash);
+    const balance = await this.getBalance(sudt_id, ethAddr);
+    return balance;
   }
 
   /**

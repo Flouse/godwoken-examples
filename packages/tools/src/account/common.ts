@@ -141,12 +141,10 @@ export async function waitForDeposit(
   timeout: number = 300,
   loopInterval = 10
 ) {
-  let accountId = undefined;
-  let sudtId: number | undefined = 1;
+  console.log(`CKB balance in Godwoken is: ${originBalance} Shannons.`);
 
-  if (sudtId === 1) {
-    console.log(`CKB balance in Godwoken is: ${originBalance} Shannons.`);
-  }
+  let accountId = undefined;
+  let sudtId: number | undefined = CKB_SUDT_ID;
 
   for (let i = 0; i < timeout; i += loopInterval) {
     console.log(
@@ -159,7 +157,7 @@ export async function waitForDeposit(
         await asyncSleep(loopInterval * 1000);
         continue;
       }
-      console.log("Your account id:", accountId);
+      console.log("\t Godwoken account ID:", accountId);
     }
 
     if (sudtScriptHash !== undefined && (!sudtId || sudtId === 1)) {
@@ -168,20 +166,18 @@ export async function waitForDeposit(
         await asyncSleep(loopInterval * 1000);
         continue;
       }
-      console.log("Your sUDT id:", sudtId);
+      console.log("\t The sUDT ID:", sudtId);
     }
 
-    // FIXME: godwokenCkbBalance
-    const address = accountScriptHash.slice(0, 42);
-    const godwokenCkbBalance = await gWeb3.getBalance(1, address);
+    const gwCkbBalance = await gWeb3.getBalanceByScriptHash(
+      CKB_SUDT_ID, accountScriptHash);
+    if (originBalance !== gwCkbBalance) {
+      console.log(`pCKB balance in Godwoken is: ${gwCkbBalance} Shannons.`);
 
-
-    if (originBalance !== godwokenCkbBalance) {
-      console.log(`CKB balance in Godwoken is: ${godwokenCkbBalance} Shannons.`);
-
-      if (sudtId !== 1) {
-        const godwokenSudtBalance = await gWeb3.getBalance(sudtId!, address);
-        console.log(`sUDT balance in Godwoken is: ${godwokenSudtBalance}.`);
+      if (sudtId !== undefined) {
+        const gwSudtBalance = await gWeb3.getBalanceByScriptHash(
+          sudtId!, accountScriptHash!);
+        console.log(`sUDT balance in Godwoken is: ${gwSudtBalance}.`);
       }
       console.log(`Deposit success!`);
       return;
