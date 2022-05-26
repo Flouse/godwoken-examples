@@ -31,8 +31,6 @@ import { Reader } from "ckb-js-toolkit";
 import TronWeb from 'tronweb';
 import * as secp256k1 from "secp256k1";
 import { privateKeyToEthAddress } from "./utils";
-import { initDeploymentConfig } from "./deployment-config";
-import { ROLLUP_TYPE_HASH } from "./godwoken-config";
 import { minimalCellCapacity } from "@ckb-lumos/helpers";
 
 export async function withdrawCLI(
@@ -204,18 +202,21 @@ export async function privateKeyToAccountId(
   gWeb3: GodwokenWeb3,
   privateKey: HexString
 ): Promise<number | undefined> {
-  const deploymentConfig = await initDeploymentConfig(gWeb3);
-
   const ethAddress = privateKeyToEthAddress(privateKey);
-  const script = {
-    ...deploymentConfig.eth_account_lock,
-    args: ROLLUP_TYPE_HASH + ethAddress.slice(2),
-  };
 
+  const [gwRollupTypeHash, { nodeInfo }] = await Promise.all([
+    gWeb3.getRollupTypeHash(),
+    gWeb3.getNodeInfo()
+  ]);
+
+  const script: Script = {
+    code_hash: nodeInfo.eoaScripts.eth.typeHash,
+    hash_type: 'type',
+    args: gwRollupTypeHash + ethAddress.slice(2),
+  };
   const scriptHash = utils.computeScriptHash(script);
 
   const id = await gWeb3.getAccountIdByScriptHash(scriptHash);
-
   return id;
 }
 

@@ -8,7 +8,7 @@ import {
   Uint64,
   Uint128,
   Uint256,
-  Godwoken,
+  GodwokenWeb3,
   RawL2Transaction,
 } from "@godwoken-examples/godwoken";
 import { UInt128ToLeBytes, UInt32ToLeBytes, UInt64ToLeBytes } from "./types";
@@ -71,13 +71,13 @@ interface PolyjuiceConfig {
 }
 
 export class Polyjuice {
-  private client: Godwoken;
+  private client: GodwokenWeb3;
   private validator_script_hash: Hash;
   private sudt_id: Uint32;
   private creator_account_id: Uint32;
 
   constructor(
-    client: Godwoken,
+    client: GodwokenWeb3,
     { validator_script_hash, sudt_id, creator_account_id }: PolyjuiceConfig
   ) {
     this.client = client;

@@ -1,17 +1,14 @@
-import {
-  initDeploymentConfig,
-} from "../modules/deployment-config";
 import { HexString, Script, Hash, utils } from "@ckb-lumos/base";
 import { Indexer } from "@ckb-lumos/base";
 import {
   TransactionSkeleton,
   parseAddress,
   sealTransaction,
-  generateAddress, // TODO
+  encodeToAddress,
 } from "@ckb-lumos/helpers";
 import {
   generateDepositLock,
-  // minimalDepositCapacity,
+  // minimalDepositCapacity, TODO
 } from "../modules/deposit";
 import { common, sudt } from "@ckb-lumos/common-scripts";
 import { key } from "@ckb-lumos/hd";
@@ -56,7 +53,7 @@ async function sendTx(
     nodeInfo.gwScripts.deposit.typeHash
   );
 
-  const toAddress: string = generateAddress(depositLock);
+  const toAddress: string = encodeToAddress(depositLock);
   let txSkeleton = TransactionSkeleton({ cellProvider: indexer });
   txSkeleton = await sudt.transfer(
     txSkeleton,
