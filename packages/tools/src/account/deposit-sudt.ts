@@ -134,7 +134,11 @@ export const run = async (program: commander.Command) => {
   const gWeb3 = new GodwokenWeb3(web3RpcUrl);
 
   try {
-    const currentBalance = gWeb3.getBalance(CKB_SUDT_ID, ethAddress);
+    const currentBalance = gWeb3.getBalance(CKB_SUDT_ID, ethAddress)
+      .catch(reason => {
+        logger.warn(reason);
+        return BigInt(0);
+      });
 
     const [txHash, layer2SudtScriptHash] = await sendTx(
       gWeb3,
