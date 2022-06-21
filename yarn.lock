@@ -40,7 +40,7 @@
     immutable "^4.0.0-rc.12"
     js-xxhash "^1.0.4"
 
-"@ckb-lumos/base@0.18.0-rc7", "@ckb-lumos/base@^0.18.0-rc6":
+"@ckb-lumos/base@0.18.0-rc7", "@ckb-lumos/base@^0.18.0-rc7":
   version "0.18.0-rc7"
   resolved "https://registry.yarnpkg.com/@ckb-lumos/base/-/base-0.18.0-rc7.tgz#3fb48c6e5a433f1f124d7625f6a176015bbe79ee"
   integrity sha512-xLWtl840Pn2FBQdJhSvPw0Nf9yVtTJDh3gJS0kQE/8IPUjykq6FIfFeZ2+qwlzg2LKAR0e26cXtL7UiKtp/7zw==
@@ -66,14 +66,14 @@
   dependencies:
     jsbi "^4.1.0"
 
-"@ckb-lumos/codec@^0.18.0-rc6":
+"@ckb-lumos/codec@^0.18.0-rc7":
   version "0.18.0-rc7"
   resolved "https://registry.yarnpkg.com/@ckb-lumos/codec/-/codec-0.18.0-rc7.tgz#16adc3a844eef30fa2d7a2e87f8e26bc50e20ae1"
   integrity sha512-F/KcqP3PgTKoI4laeDR3XUO9D5jVUdIyRlAvooNcKz3b+3njymbz9g2F+nqzYFDTtbOAVfN135+gnUSf2t0rOg==
   dependencies:
     "@ckb-lumos/bi" "^0.17.0-rc8"
 
-"@ckb-lumos/common-scripts@^0.18.0-rc6":
+"@ckb-lumos/common-scripts@^0.18.0-rc7":
   version "0.18.0-rc7"
   resolved "https://registry.yarnpkg.com/@ckb-lumos/common-scripts/-/common-scripts-0.18.0-rc7.tgz#cb43f0e2fa2469fbe8140ceff535bf88a62ec19f"
   integrity sha512-uomQmhVKqfTvqXmF0XRKyEZ4lmM9hsdr7+Xr4sOXxu1dZuAw2NW//ixWLLlNlmMdQ8gdhpfr/IALCZ6clyotLw==
@@ -86,7 +86,7 @@
     "@ckb-lumos/toolkit" "0.18.0-rc7"
     immutable "^4.0.0-rc.12"
 
-"@ckb-lumos/config-manager@0.18.0-rc7", "@ckb-lumos/config-manager@^0.18.0-rc6":
+"@ckb-lumos/config-manager@0.18.0-rc7", "@ckb-lumos/config-manager@^0.18.0-rc7":
   version "0.18.0-rc7"
   resolved "https://registry.yarnpkg.com/@ckb-lumos/config-manager/-/config-manager-0.18.0-rc7.tgz#833e97274bf355589a5e5b353437402f55a87f72"
   integrity sha512-hsdVIOIs767vJCLZNaIRswZoRxO+ki3eXSIjrRByIwSMTh+c0ROlBbxTsVU2dds7Bg7WPdIrpL1dT3H7fbp1JQ==
@@ -96,7 +96,7 @@
     "@types/deep-freeze-strict" "^1.1.0"
     deep-freeze-strict "^1.1.1"
 
-"@ckb-lumos/hd@^0.18.0-rc6":
+"@ckb-lumos/hd@^0.18.0-rc7":
   version "0.18.0-rc7"
   resolved "https://registry.yarnpkg.com/@ckb-lumos/hd/-/hd-0.18.0-rc7.tgz#1042f568451a9413a9b9e354e23a64d869c5b323"
   integrity sha512-s/cTDc9ns/+XvGxlCUS9GVrqKhDKHHQykcSPVGUs82hBdBW5k4hyudcyT1OPJM6DJk1rSb9e1EUKK2aZyUA63w==
@@ -108,7 +108,7 @@
     sha3 "^2.1.3"
     uuid "^8.3.0"
 
-"@ckb-lumos/helpers@0.18.0-rc7", "@ckb-lumos/helpers@^0.18.0-rc6":
+"@ckb-lumos/helpers@0.18.0-rc7", "@ckb-lumos/helpers@^0.18.0-rc7":
   version "0.18.0-rc7"
   resolved "https://registry.yarnpkg.com/@ckb-lumos/helpers/-/helpers-0.18.0-rc7.tgz#656d7045d82656a64e1a8f23a6e3f4615f5a1251"
   integrity sha512-FLoixucnozDHoyVZFg8kojvkBEOUZuBZeOMjko6MR0ozARZhZMUxHbWbtbpKVsrLtD96/ljXzj4oHaovpi28Cg==
@@ -120,7 +120,7 @@
     bech32 "^2.0.0"
     immutable "^4.0.0-rc.12"
 
-"@ckb-lumos/rpc@0.18.0-rc7", "@ckb-lumos/rpc@^0.18.0-rc6":
+"@ckb-lumos/rpc@0.18.0-rc7", "@ckb-lumos/rpc@^0.18.0-rc7":
   version "0.18.0-rc7"
   resolved "https://registry.yarnpkg.com/@ckb-lumos/rpc/-/rpc-0.18.0-rc7.tgz#333690c022445fcf5bf62c550484b0b301f8c8d4"
   integrity sha512-2eWOjvTafJi+VpxiLPJjBcBydiwicUbouhhYzGee7M+aGypgNUd4xH2vcVu/BHLXZG/sCbhy/1iaiwXfEWT5Lw==
